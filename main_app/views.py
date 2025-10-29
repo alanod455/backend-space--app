@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Session
 from .serializers import SessionSerializer
-
+from django.shortcuts import get_object_or_404
 
 class Home(APIView):
   def get(self, request):
@@ -48,3 +48,22 @@ class  SessionDetail(APIView):
     except Exception as err:
         return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
+  def put(self, request, session_id):
+    try: 
+        session = get_object_or_404(Session, id=session_id)
+        serializer = self.serializer_class(session, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as err:
+        return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+  def delete(self, request, session_id):
+    try:
+        session = get_object_or_404(Session, id=session_id)
+        session.delete()
+        return Response({'success': True}, status=status.HTTP_200_OK)
+    except Exception as err:
+        return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
