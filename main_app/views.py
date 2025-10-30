@@ -5,6 +5,10 @@ from .models import Session
 from .serializers import SessionSerializer
 from django.shortcuts import get_object_or_404
 
+import base64
+import os
+from django.conf import settings
+
 class Home(APIView):
   def get(self, request):
     content = {'message': 'Welcome to your space!'}
@@ -25,17 +29,33 @@ class SessionsIndex(APIView):
 
     def post(self, request):
         try:
-            serializer = self.serializer_class(data=request.data)
+            print("Line 28 Received data:", request.data)
+            data = request.data.copy()
+
+            if not data.get('image'):
+                default_path = os.path.join(settings.BASE_DIR, 'frontend', 'public', 'CARD.png')
+                with open(default_path, 'rb') as f:
+                    encoded = base64.b64encode(f.read()).decode('utf-8')
+                    data['image'] = f'data:image/png;base64,{encoded}'
+
+            if 'duration' in data:
+                try:
+                    data['duration'] = int(data['duration'])
+                except ValueError:
+                    return Response({'error': 'Invalid duration value'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = self.serializer_class(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as err:
+            import traceback
+            traceback.print_exc()
             return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
             
-
 class  SessionDetail(APIView):
   serializer_class =  SessionSerializer
   lookup_field = 'id'
