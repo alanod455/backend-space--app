@@ -12,3 +12,21 @@ class Session(models.Model):
         return self.title
 
 
+
+
+class Space(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='spaces')
+
+    type = models.CharField(max_length=20, choices=[
+        ('star', 'Star'),
+        ('planet', 'Planet'),
+    ])
+
+    x = models.IntegerField(default=0)
+    y = models.IntegerField(default=0)
+
+    image = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.type} from session {self.session.title}"

@@ -87,3 +87,11 @@ class  SessionDetail(APIView):
         return Response({'success': True}, status=status.HTTP_200_OK)
     except Exception as err:
         return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class SpacesIndex(APIView):
+    def get(self, request, session_id):
+        spaces = Space.objects.filter(session_id=session_id)
+        serializer = SpaceSerializer(spaces, many=True)
+        return Response(serializer.data)
