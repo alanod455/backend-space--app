@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Session
+from .models import Session, Space, Task
+from .serializers import SpaceSerializer, TaskSerializer
 from .serializers import SessionSerializer
 from django.shortcuts import get_object_or_404
 
@@ -95,3 +96,53 @@ class SpacesIndex(APIView):
         spaces = Space.objects.filter(session_id=session_id)
         serializer = SpaceSerializer(spaces, many=True)
         return Response(serializer.data)
+
+
+
+class TasksIndex(APIView):
+  serializer_class = TaskSerializer
+
+  def get(self, request, session_id):
+    try:
+      queryset = Task.objects.filter(session_id=session_id)
+      return Response(self.serializer_class(queryset, many=True).data, status=status.HTTP_200_OK)
+    except Exception as err:
+      return Response({'error': str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+  def post(self, request, session_id):
+        try:
+            session = Session.objects.get(id=session_id)
+        except Session.DoesNotExist:
+            return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        data = request.data.copy()
+        data['session'] = session.id
+        serializer = TaskSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class TaskDetail(APIView):
+    serializer_class = TaskSerializer
+
+    def put(self, request, session_id, task_id):
+        try:
+            task = Task.objects.get(id=task_id, session_id=session_id)
+        except Task.DoesNotExist:
+            return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, session_id, task_id):
+        try:
+            task = Task.objects.get(id=task_id, session_id=session_id)
+            task.delete()
+            return Response({'message': 'Task deleted'}, status=status.HTTP_204_NO_CONTENT)
+        except Task.DoesNotExist:
+            return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)

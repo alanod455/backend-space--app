@@ -1,16 +1,5 @@
 from rest_framework import serializers
-from .models import Session,Space
-
-class SessionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Session
-        fields = ['id', 'title', 'duration', 'image', 'sound', 'created_at']
-
-        extra_kwargs = {
-            'image': {'required': False, 'allow_null': True},
-            'duration': {'required': False, 'allow_null': True},
-            'sound': {'required': False, 'allow_null': True}
-        }
+from .models import Session,Space,Task
 
 class SpaceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,3 +20,25 @@ class SpaceSerializer(serializers.ModelSerializer):
 
         validated_data['type'] = space_type
         return super().create(validated_data)
+
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'title', 'duration', 'session', 'created_at']
+        
+        
+        
+        
+class SessionSerializer(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Session
+        fields = ['id', 'title', 'duration', 'image', 'sound', 'created_at', 'tasks']
+        extra_kwargs = {
+            'image': {'required': False, 'allow_null': True},
+            'duration': {'required': False, 'allow_null': True},
+            'sound': {'required': False, 'allow_null': True}
+        }

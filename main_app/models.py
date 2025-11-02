@@ -30,3 +30,14 @@ class Space(models.Model):
 
     def __str__(self):
         return f"{self.type} from session {self.session.title}"
+
+
+
+class Task(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='tasks')
+    title = models.CharField(max_length=100)
+    duration = models.PositiveIntegerField(help_text="Duration in minutes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.duration} min)"
