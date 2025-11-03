@@ -63,13 +63,14 @@ class SessionDetail(APIView):
 
     def put(self, request, session_id):
         session = get_object_or_404(Session, id=session_id, user=request.user)
-        serializer = self.serializer_class(session, data=request.data)
-        if not serializer.is_valid():
-            print("Validation errors:", serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-  
-            serializer.save()
-            return Response(serializer.data)
+        data = request.data.copy()
+        data['user'] = request.user.id
+
+        serializer = self.serializer_class(session, data=data, partial=True)
+        if serializer.is_valid():
+             serializer.save()
+             return Response(serializer.data)
+        print("Validation errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, session_id):
@@ -122,7 +123,8 @@ class TaskDetail(APIView):
     def delete(self, request, session_id, task_id):
         task = get_object_or_404(Task, id=task_id, session_id=session_id, session__user=request.user)
         task.delete()
-        return Response({'message': 'Task deleted'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'Task deleted'}, status=status.HTTP_200_OK)
+
 
 
 class CreateUserView(generics.CreateAPIView):
