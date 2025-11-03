@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Session(models.Model):
     title = models.CharField(max_length=100)
@@ -6,6 +7,7 @@ class Session(models.Model):
     image = models.TextField(blank=True, null=True) 
     sound = models.CharField(max_length=255, null=True, blank=True)  
     created_at = models.DateTimeField(auto_now_add=True) 
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
     def __str__(self):
